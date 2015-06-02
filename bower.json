@@ -1,0 +1,13 @@
+{
+  "name": "simcell",
+  "version": "0.0.0",
+  "homepage": "https://github.com/jackowacko83/simcell",
+  "authors": [
+    "jackowacko83 <jacob.klimes@gmx.net>",
+    "Andreas Bissinger <mail@bissinger-andreas.de>"
+  ],
+  "license": "MIT",
+  "dependencies": {
+    "pixi.js": "~3.0.6"
+  }
+}
