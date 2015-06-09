@@ -10,7 +10,7 @@
         </style>
     </head>
     <body>
-        
+        ggg
     </body>
 
     <script type="text/javascript">
@@ -22,47 +22,105 @@
 
         stage.interactive = true;
 
-        var graphics = new PIXI.Graphics();
+
         bacteriaArray = [];
-        // set a fill and line style
-        // graphics.beginFill(0xFF3300);
-        // graphics.lineStyle(10, 0xffd900, 1);
 
-        // draw a shape
-        // graphics.moveTo(50,50);
-        // graphics.lineTo(250, 50);
-        // graphics.lineTo(100, 100);
-        // graphics.lineTo(250, 220);
-        // graphics.lineTo(50, 220);
-        // graphics.lineTo(50, 50);
-        // graphics.endFill();
+        function Bacteria (size, location, color) {
+            this.bactSize = size;
+            this.bactLocation = location;
+            this.color;
+            switch(color) {
+                case 0:
+                    color = 0xDC143C;
+                    break;
+                case 1:
+                    color = 0x0000CD;
+                    break;
+                case 2:
+                    color = 0xFFFF00;
+                    break;
+                case 3:
+                    color = 0xFFFFFF;
+                    break;
+                default:
+                    color = 0xFFFF0B;
+            }
+            this.color = color;
+            this.moving = true;
+            var bactGraphics = new PIXI.Graphics();
+            this.bactGraphics = bactGraphics;
+            
+            this.draw(location[0], location[1], size, color);
+            
+        }
 
-        // set a fill and line style again
-        // graphics.lineStyle(10, 0xFF0000, 0.8);
-        // graphics.beginFill(0xFF700B, 1);
+        Bacteria.prototype.behaviourMoving = function(x, y) {
+            var xMove = x;
+            var yMove = y;
+            if (this.moving && !this.collisionCheck()){
+                this.draw(this.bactLocation[0]+xMove, this.bactLocation[1]+yMove, this.bactSize, this.color);
+            }
+        };
 
-        // draw a second shape
-        // graphics.moveTo(210,300);
-        // graphics.lineTo(450,320);
-        // graphics.lineTo(570,350);
-        // graphics.quadraticCurveTo(600, 0, 480,100);
-        // graphics.lineTo(330,120);
-        // graphics.lineTo(410,200);
-        // graphics.lineTo(210,300);
-        // graphics.endFill();
+        Bacteria.prototype.draw = function(xloc, yloc, size, color) {
+            var xloca = xloc;
+            var yloca = yloc;
+            this.bactGraphics.clear();
+            this.bactGraphics.lineStyle(0);
+            this.bactGraphics.beginFill(color, 0.5);
+            if (xloc+size>800){
+                xloca = 800-size;
+            }
+            if (xloc-size<0){
+                xloca = 0+size;
+            }
+            if (yloc+size>600){
+                yloca = 600-size;
+            }
+            if (yloc-size<0){
+                yloca = size;
+            }
+            
+            this.bactGraphics.drawCircle(xloca, yloca, size);
+            this.bactLocation = [xloca, yloca];
+            this.color = color;
+            this.bactSize = size;
+            this.bactGraphics.endFill(); 
+           // console.log(this);
+        };
 
-        // draw a rectangle
-        // graphics.lineStyle(2, 0x0000FF, 1);
-        // graphics.drawRect(50, 250, 100, 100);
 
-        // draw a circle
+        Bacteria.prototype.calculateDistanceToBacteria = function(otherBacteria) {
+            var xdist = Math.abs(this.bactLocation[0] - otherBacteria.bactLocation[0]);
+            var ydist = Math.abs(this.bactLocation[1] - otherBacteria.bactLocation[1]);
+            var distance = Math.sqrt( Math.pow(xdist,2) + Math.pow(ydist,2) );
+            return distance;
+        };
+
+        Bacteria.prototype.collisionCheck = function() {
+            var allBacteria = bacteriaArray;
+            
+            var index = allBacteria.indexOf(this);
+            for (var j = 0; j < allBacteria.length; j++) {
+                if (j === index) {
+                    continue;
+                }
+                var otherBact = allBacteria[j];
+                var distance = this.calculateDistanceToBacteria(otherBact);
+                //console.log("distance: " + distance + "; sizes = " + (this.bactSize+otherBact.bactSize));
+                if (distance < this.bactSize + otherBact.bactSize) {
+                    return true;
+                }
+
+            }
+            return false;
         
+        };
 
-        // graphics.lineStyle(20, 0x33FF00);
-        // graphics.moveTo(30,30);
-        // graphics.lineTo(600, 300);
-        for (var i=0; i<5; i++) {
-            var randomSize = Math.floor((Math.random() * 10) + 1) * Math.floor((Math.random() * 5) + 1);
+        function createRandomBacteria() {
+            //create random bacterias
+
+            var randomSize = makeRandomSize();
             var xLocation = 0;
             var yLocation = 0;
             while (xLocation + randomSize > 800 || xLocation - randomSize < 0) {
@@ -89,13 +147,49 @@
                 default:
                     color = "green";
             }
+
             console.log("x: " + xLocation + "; y: " + yLocation + "; color: " + color);
+            var i = Math.floor((Math.random() * 4) + 1);
             var createBacteria = new Bacteria(randomSize, [xLocation, yLocation], i);
 
-            
+            while (createBacteria.collisionCheck()){
+                var xLocation2 = 0;
+                var yLocation2 = 0;
+                var randomSize2 = makeRandomSize();
+                while (xLocation2 + randomSize2 > 800 || xLocation2 - randomSize2 < 0) {
+                    xLocation2 = Math.floor((Math.random() * 800) + 1);
+                }
+                while (yLocation2 + randomSize2 > 600 || yLocation2 - randomSize2 < 0) {
+                    yLocation2 = Math.floor((Math.random() * 600) + 1);
+                }
+                createBacteria = new Bacteria(randomSize2, [xLocation2, yLocation2], i);
+                console.log(createBacteria);
+                console.log("Bacteria repositioned");
+            }
+            stage.addChild(createBacteria.bactGraphics);
             bacteriaArray.push(createBacteria);
+        
         }
-        collision();
+        
+        function makeRandomSize(){
+            var randomSize = Math.floor((Math.random() * 10) + 1) * Math.floor((Math.random() * 10) + 1);
+            return randomSize;
+        }
+
+        function makeRandomLocation(size){
+            var xLocation = 0;
+            var yLocation = 0;
+            while (xLocation + size > 800 || xLocation - size < 0) {
+                xLocation = Math.floor((Math.random() * 800) + 1);
+            }
+            while (yLocation + size > 600 || yLocation - size < 0) {
+                yLocation = Math.floor((Math.random() * 600) + 1);
+            }
+            return [xLocation, yLocation];
+
+        }
+            
+         
         //stage.addChild(graphics);
 
         // let's create a moving shape
@@ -123,6 +217,20 @@
 
         function animate() {
 
+            for(var i = 0; i < bacteriaArray.length; i++){
+                var b = bacteriaArray[i];
+                //b.bactGraphics.clear();
+                //b.draw(b.bactLocation[0]+1, b.bactLocation[1]+1, b.bactSize, b.color);
+                
+                var factorX = Math.floor((Math.random() * 100) + 1)%2;
+                var posOrnegX = Math.pow((-1),factorX);
+                var factorY = Math.floor((Math.random() * 100) + 1)%2;
+                var posOrnegY = Math.pow((-1), factorY);
+                var speedx = Math.floor((Math.random() * 3) + 1);
+                var speedy = Math.floor((Math.random() * 3) + 1);
+                b.behaviourMoving(speedx*posOrnegX, speedy*posOrnegY);
+                //b.behaviourMoving(0, 1);
+            }
             // thing.clear();
 
             // count += 0.1;
@@ -138,7 +246,7 @@
             // thing.lineTo( -120 + Math.sin(count) * 20, -100 + Math.cos(count)* 20);
 
             // thing.rotation = count * 0.1;
-            graphics.clear();
+            //graphics.clear();
             // var growthFactor = 1;
             // count = count + growthFactor;
             // graphics.lineStyle(0);
@@ -158,35 +266,8 @@
             requestAnimationFrame( animate );
         }
 
-        function Bacteria (size, location, color) {
-            this.bactSize = size;
-            this.bactLocation = location;
-            this.color;
-            switch(color) {
-                case 0:
-                    color = 0xDC143C;
-                    break;
-                case 1:
-                    color = 0x0000CD;
-                    break;
-                case 2:
-                    color = 0xFFFF00;
-                    break;
-                case 3:
-                    color = 0xFFFFFF;
-                    break;
-                default:
-                    color = 0xFFFF0B;
-            }
+        
 
-            var bactGraphics = new PIXI.Graphics();
-            this.bactGraphics = bactGraphics;
-            stage.addChild(bactGraphics);
-            bactGraphics.lineStyle(0);
-            bactGraphics.beginFill(color, 0.5);
-            bactGraphics.drawCircle(location[0], location[1], size);
-            bactGraphics.endFill(); 
-        }
 
         function collision () {
             
@@ -197,11 +278,10 @@
                 var bact = allBacteria[i];
                 for (var j = i+1; j < allBacteria.length; j++) {
                             var otherBact = allBacteria[j];
-                            var xdist = Math.abs(bact.bactLocation[0] - otherBact.bactLocation[0]);
-                            var ydist = Math.abs(bact.bactLocation[1] - otherBact.bactLocation[1]);
-                            // TODO 
-                            var distance = Math.sqrt( Math.pow(xdist,2) + Math.pow(ydist,2) );
-                            console.log("distance: " + distance + "; sizes = " + (bact.bactSize+otherBact.bactSize));
+                            //console.log(bact);
+                            //console.log(otherBact);
+                            var distance = bact.calculateDistanceToBacteria(otherBact);
+                            //console.log("distance: " + distance + "; sizes = " + (bact.bactSize+otherBact.bactSize));
                             if (distance < bact.bactSize + otherBact.bactSize) {
                                 //TODO return both bacterias
                                 alert("Collision detected");
@@ -210,28 +290,6 @@
             }
             
         }
-
-        Bacteria.prototype.collisionCheck = function() {
-            var allBacteria = bacteriaArray;
-            //var steve = this.engine.steve; // yes, he is called steve :)
-            var index = allBacteria.indexOf(this);
-            for (var j = 0; j < allBacteria.length; j++) {
-                if (j === index) {
-                    continue;
-                }
-                var otherBact = allBacteria[j];
-                var xdist = Math.abs(this.bactLocation[0] - otherBact.bactLocation[0]);
-                var ydist = Math.abs(this.bactLocation[1] - otherBact.bactLocation[1]);
-                var distance = Math.sqrt( Math.pow(xdist,2) + Math.pow(ydist,2) );
-                console.log("distance: " + distance + "; sizes = " + (this.bactSize+otherBact.bactSize));
-                if (distance < this.bactSize + otherBact.bactSize) {
-                    return true;
-                }
-
-            }
-            return false;
-        
-        };
-        
+        collision();
     </script>
 </html>
